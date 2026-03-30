@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.idea/
+data/uploads/*
+!data/uploads/.gitkeep
+data/chroma/*
+!data/chroma/.gitkeep
+data/metadata/documents.json
