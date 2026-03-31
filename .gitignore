@@ -7,4 +7,15 @@ data/uploads/*
 !data/uploads/.gitkeep
 data/chroma/*
 !data/chroma/.gitkeep
-data/metadata/documents.json
+data/metadata/documents.json.env.local
+.env.*
+*.key
+*.pem
+.env.local
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+secrets.yaml
+config.ini
