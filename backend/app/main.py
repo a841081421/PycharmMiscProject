@@ -18,6 +18,7 @@ from .schemas import (
 from .services.document_loader import DocumentLoader
 from .services.splitter import TextSplitter
 from .services.vector_store import VectorStore
+from .services.enhanced_vector_store import EnhancedVectorStore
 from .services.llm_client import LLMClient, EnhancedStreamingResponse
 from .services.rag_service import RAGService
 from .services.metadata_store import MetadataStore
@@ -26,10 +27,40 @@ from .services.conversation_store import ConversationStore
 app = FastAPI(title="Local KB QA", version="0.1.0")
 
 splitter = TextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-vector_store = VectorStore(str(CHROMA_DIR), EMBEDDING_MODEL)
+
+# 使用增强的向量存储
+try:
+    vector_store = EnhancedVectorStore(str(CHROMA_DIR), EMBEDDING_MODEL)
+    print("✅ 使用增强向量存储（支持混合搜索）")
+except Exception as e:
+    print(f"⚠️  增强向量存储初始化失败，使用基础向量存储: {e}")
+    vector_store = VectorStore(str(CHROMA_DIR), EMBEDDING_MODEL)
+
 metadata_store = MetadataStore(METADATA_FILE)
 llm_client = LLMClient(LLM_API_KEY, LLM_BASE_URL, LLM_MODEL)
-rag_service = RAGService(vector_store, llm_client, TOP_K)
+
+# 配置RAG服务（启用所有增强功能）
+rag_config = {
+    "rerank_model": "BAAI/bge-reranker-base",
+    "model_cache_dir": "data/models",
+    "context_template": "default",
+    "user_template": "default",
+    "max_context_length": 4000,
+    "include_context_guide": True
+}
+
+rag_service = RAGService(
+    vector_store=vector_store,
+    llm_client=llm_client,
+    top_k=TOP_K,
+    use_hybrid_search=True,
+    use_rerank=True,
+    use_enhanced_prompt=True,
+    prompt_template="default",
+    config=rag_config
+)
+print("✅ RAG服务配置完成（混合搜索 + 重排序 + 增强Prompt）")
+
 conversation_store = ConversationStore(Path("data/conversations.db"))
 
 
